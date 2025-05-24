@@ -1,0 +1,118 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+copy.*
+old/
+tmp/
+temp/
+
+# Streamlit
+.streamlit/secrets.toml
+!.streamlit/config.toml
+
+# Machine Learning models (opcional - comentar si quieres versionar los modelos)
+# *.pkl
+# *.joblib
+# *.h5
+# *.model
+
+# Data files (opcional - comentar si quieres versionar los datos)
+# data/*.csv
+# data/*.json
+# data/*.parquet
+data/raw/
+data/external/
+*.zip
+*.tar.gz
+*.csv.gz
+
+# Plots and outputs (se pueden regenerar)
+plots/
+outputs/
+results/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Cache directories
+.cache/
+.tox/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Specific to this project
+eda_summary.pkl
+pokemon-dataset-with-team-combat.zip
+
+# Keep important configs
+!requirements.txt
+!setup.fish
+!start_app.fish
+!run_tests.fish
