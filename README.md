@@ -154,10 +154,12 @@ python -m pytest tests/ -v
 
 ## 📈 Métricas del Modelo
 
-- **Accuracy**: ~85%
-- **Precision**: ~83%
-- **Recall**: ~87%
-- **F1-Score**: ~85%
+- **Accuracy**: 81.12%
+- **Precision**: 80.95%
+- **Recall**: 77.88%
+- **F1-Score**: 79.39%
+
+*Evaluado sobre 9,610 combates del conjunto de prueba (20% del dataset total)*
 
 ## 🛠️ Configuración Avanzada
 
