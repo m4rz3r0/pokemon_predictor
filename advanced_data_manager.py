@@ -1,5 +1,5 @@
 """
-Clase mejorada para gestión de datos del predictor de combates Pokémon
+Clase mejorada para gestión de datos del sistema de predicción de combates Pokémon
 """
 
 import pandas as pd
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Clases de excepción personalizadas
 class PokemonBattleError(Exception):
-    """Excepción base para errores del predictor de combates Pokémon"""
+    """Excepción base para errores del sistema de predicción de combates Pokémon"""
     pass
 
 class DataValidationError(PokemonBattleError):

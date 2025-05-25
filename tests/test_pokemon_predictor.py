@@ -1,5 +1,5 @@
 """
-Tests unitarios para el predictor de combates Pokémon
+Tests unitarios para el sistema de predicción de combates Pokémon
 """
 
 import pytest

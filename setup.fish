@@ -1,9 +1,9 @@
 #!/usr/bin/env fish
 
-# Script de instalación y configuración para el Predictor de Combates Pokémon
+# Script de instalación y configuración para el Sistema de predicción de Combates Pokémon
 # Uso: ./setup.fish
 
-echo "🎮 Configurando Predictor de Combates Pokémon..."
+echo "🎮 Configurando Sistema de predicción de Combates Pokémon..."
 
 # Verificar que estamos en el directorio correcto
 if not test -f "streamlit_app.py"

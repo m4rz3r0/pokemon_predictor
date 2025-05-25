@@ -1,4 +1,4 @@
-# 🎮 Predictor de Combates Pokémon
+# 🎮 Sistema de predicción de Combates Pokémon
 
 ## 📋 Descripción del Proyecto
 

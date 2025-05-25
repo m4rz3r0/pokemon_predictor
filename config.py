@@ -3,7 +3,7 @@ import streamlit as st
 
 # Configuración de la página
 PAGE_CONFIG = {
-    "page_title": "Predictor de Combates Pokémon",
+    "page_title": "Sistema de predicción de Combates Pokémon",
     "page_icon": "⚔️",
     "layout": "wide",
     "initial_sidebar_state": "expanded"

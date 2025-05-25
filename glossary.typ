@@ -21,7 +21,7 @@
   (
     key: "ensemble-learning",
     short: "Ensemble Learning",
-    description: "Técnica que combina múltiples modelos de aprendizaje para crear un predictor más robusto y preciso que cualquier modelo individual.",
+    description: "Técnica que combina múltiples modelos de aprendizaje para crear un sistema de predicción más robusto y preciso que cualquier modelo individual.",
     group: "Machine Learning"
   ),
   (

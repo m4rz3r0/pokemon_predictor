@@ -42,7 +42,7 @@ def main():
     load_css()
     
     # Título principal
-    st.markdown("<h1 class='main-header'>⚔️ Predictor de Combates Pokémon</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>⚔️ Sistema de predicción de Combates Pokémon</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Sistema de predicción avanzado basado en datos reales de combates</p>", unsafe_allow_html=True)
     
     # Configuración de la barra lateral
@@ -434,7 +434,7 @@ def main():
             st.dataframe(report_df)
         
         with tab3:
-            st.header("Acerca de este Predictor")
+            st.header("Acerca de este Sistema de predicción")
             
             st.markdown("""
             ### Sistema de Predicción de Combates Pokémon

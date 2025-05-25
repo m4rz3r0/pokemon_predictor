@@ -16,7 +16,7 @@ from config import TYPE_COLORS
 MODEL_FEATURE_COLUMNS: List[str] = []
 
 class PokemonBattleError(Exception):
-    """Excepción base para errores del predictor de combates Pokémon"""
+    """Excepción base para errores del sistema de predicción de combates Pokémon"""
     pass
 
 class DataValidationError(PokemonBattleError):

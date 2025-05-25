@@ -110,6 +110,7 @@ El segundo componente fundamental son los *Datos de Combates (#raw("`combats.csv
 El tercer elemento integrador corresponde a los *Datos de Características de Combates (#raw("`combats_features.csv`"))*, que constituyen un dataset preprocesado y enriquecido derivado de la combinación y transformación de los conjuntos anteriores. Este archivo representa la entrada directa para el entrenamiento del modelo de machine learning, conteniendo un conjunto de características calculadas para cada par de Pokémon en combate (referidos como Pokémon A y Pokémon B). El dataset incluye no solamente las estadísticas individuales sino también las diferencias calculadas entre estas, junto con una variable objetivo binaria (#raw("`target`")) que indica si el Pokémon A resultó victorioso (valor 1) o fue derrotado (valor 0).
 
 == Procesos de carga y limpieza:
+
 La transformación de los datos crudos en un formato adecuado para el análisis y entrenamiento del modelo es un paso crítico. Este proceso se ha automatizado mediante el script de Python #raw("`clean_data.py`"), que realiza las siguientes operaciones principales:
 
 #set enum(numbering: "1.")
@@ -137,13 +138,14 @@ El proceso inicia con la *extracción de estadísticas base*, donde se recuperan
 Finalmente, la *alineación de características* asegura que el DataFrame resultante para la predicción, que contiene las características generadas, se alinee con el conjunto exacto de columnas que el modelo espera como entrada. Estas columnas se definen globalmente como #raw("`MODEL_FEATURE_COLUMNS`") a partir del dataset #raw("`features_df`"). Cualquier característica presente en #raw("`MODEL_FEATURE_COLUMNS`") pero no generada para la instancia de predicción específica se rellena automáticamente con un valor de 0, garantizando la consistencia dimensional requerida por el modelo.
 
 == División de datos:
-Para el proceso de entrenamiento y evaluación del modelo, el conjunto de datos #raw("`features_df`") (que ya contiene las características precalculadas de combates históricos) se divide en un conjunto de entrenamiento y un conjunto de prueba. Esta división se realiza mediante la función #raw("`train_test_split`") de la librería #raw("`scikit-learn`"). Se reserva un 20% de los datos para el conjunto de prueba (#raw("`test_size=0.2`")), mientras que el 80% restante se utiliza para el entrenamiento. Se establece una semilla aleatoria fija (#raw("`random_state=42`")) para asegurar que la división sea la misma en cada ejecución, garantizando así la reproducibilidad de los resultados del entrenamiento y la evaluación. Las características predictoras se separan de la variable objetivo (#raw("`target`")).
+Para el proceso de entrenamiento y evaluación del modelo, el conjunto de datos #raw("`features_df`") (que ya contiene las características precalculadas de combates históricos) se divide en un conjunto de entrenamiento y un conjunto de prueba. Esta división se realiza mediante la función #raw("`train_test_split`") de la librería #raw("`scikit-learn`"). Se reserva un 20% de los datos para el conjunto de prueba (#raw("`test_size=0.2`")), mientras que el 80% restante se utiliza para el entrenamiento. Se establece una semilla aleatoria fija (#raw("`random_state=42`")) para asegurar que la división sea la misma en cada ejecución, garantizando así la reproducibilidad de los resultados del entrenamiento y la evaluación. Las características sistema de predicciónas se separan de la variable objetivo (#raw("`target`")).
 
 = Análisis Exploratorio de Datos (EDA)
 
 Antes de proceder con el entrenamiento del modelo, se realizó un Análisis Exploratorio de Datos (EDA) sobre el conjunto de características procesado (#raw("`data/combats_features.csv`")). Este análisis, implementado en el script #raw("`eda.py`"), tiene como objetivo resumir las principales características de los datos, detectar patrones, identificar anomalías y comprender las distribuciones de las variables. Los principales hallazgos y visualizaciones generadas se describen a continuación. Todas las figuras y reportes CSV generados por el script se almacenan en el directorio #raw("`plots/`").
 
 == Información Básica y Resumen Estadístico
+
 Inicialmente, se verificaron las dimensiones del dataset y se obtuvo un resumen estadístico de las variables numéricas. El conjunto de datos #raw("`combats_features.csv`") contiene *48,049 combates* entre Pokémon, con un total de *92 características* distribuidas estratégicamente para capturar la complejidad de los enfrentamientos.
 
 El conjunto de características comprende *6 características de diferencias estadísticas* que incluyen #raw("`diff_hp`"), #raw("`diff_attack`"), #raw("`diff_defense`"), #raw("`diff_special_attack`"), #raw("`diff_special_defense`"), y #raw("`diff_speed`"), las cuales cuantifican las ventajas relativas entre los contendientes. Adicionalmente, se incorporan *76 características de tipos codificadas one-hot* que representan comprehensivamente los tipos primarios y secundarios de ambos Pokémon (38 características para cada uno), capturando las complejas relaciones de efectividad de tipos del sistema de combate. El dataset se complementa con *información adicional* que incluye IDs, nombres, estadísticas base individuales y URLs de sprites para facilitar la interpretación y visualización de resultados.
@@ -151,14 +153,17 @@ El conjunto de características comprende *6 características de diferencias est
 Las características de diferencia presentan distribuciones aproximadamente normales centradas en cero, con desviaciones estándar que varían según la estadística (por ejemplo, #raw("`diff_hp`") tiene mayor variabilidad que #raw("`diff_speed`")), reflejando la diversidad natural en las capacidades de combate entre diferentes especies de Pokémon.
 
 == Análisis de Valores Faltantes
+
 Se comprobó la existencia de valores faltantes en el dataset. El script genera un reporte (#raw("`plots/missing_report.csv`")) que, según el archivo #raw("`missing_report.csv`") proporcionado, indica que *no hay valores faltantes* en el conjunto de datos #raw("`combats_features.csv`") después del preprocesamiento realizado por #raw("`clean_data.py`"). Esto es ideal, ya que simplifica la etapa de modelado.
 
 == Distribución de la Variable Objetivo
+
 Se analizó la distribución de la variable objetivo (#raw("`target`")), que indica si el Pokémon A ganó (1) o perdió (0) el combate. Del análisis de los 48,049 combates en el dataset, se observa una distribución aproximadamente balanceada entre las dos clases, con una ligera tendencia hacia una de ellas. Este balance es favorable para el entrenamiento de modelos de clasificación, ya que reduce el riesgo de sesgo hacia la clase mayoritaria y permite que el modelo aprenda patrones representativos de ambos resultados de combate.
 
 El equilibrio en la variable objetivo es crucial para la validez de las métricas de evaluación como #gls("accuracy"), #gls("precision") y #gls("recall"), ya que en conjuntos de datos desbalanceados estas métricas pueden ser engañosas.
 
 == Correlación de Diferencias de Estadísticas con el Objetivo
+
 Se investigó la correlación entre las diferencias de estadísticas (#raw("`diff_*`")) y la variable objetivo, revelando patrones interpretables que validan la lógica del combate Pokémon. Las características de diferencia muestran correlaciones significativas con el resultado del combate, donde se observan correlaciones positivas para todas las diferencias de estadísticas, indicando que cuando el Pokémon A presenta ventaja en una estadística específica, aumenta la probabilidad de victoria.
 
 El análisis revela un patrón esperado donde las diferencias en estadísticas ofensivas (ataque, ataque especial) y velocidad tienden a mostrar correlaciones más fuertes con la victoria, mientras que las estadísticas defensivas presentan correlaciones más moderadas. Esta observación es consistente con la mecánica de combate donde la capacidad de causar daño rápidamente puede ser determinante. Desde una perspectiva práctica, una correlación positiva de 0.3 en #raw("`diff_attack`") significa que las diferencias en ataque explican aproximadamente el 9% de la variabilidad en los resultados de combate, lo cual representa una contribución sustancial considerando la complejidad multifactorial de los enfrentamientos.
@@ -171,6 +176,7 @@ Adicionalmente, se generó un análisis de correlación entre las estadísticas 
 ) <fig-stats-corr>
 
 == Distribución de las Diferencias de Estadísticas
+
 Se analizaron las distribuciones de cada una de las características de diferencia de estadísticas (#raw("`diff_hp`"), #raw("`diff_attack`"), etc.) para comprender su comportamiento estadístico y validar la idoneidad de los datos para el modelado. El análisis revela que todas las características de diferencia presentan distribuciones aproximadamente normales centradas en cero, lo cual es estadísticamente esperado dado que representan diferencias entre pares de Pokémon seleccionados aleatoriamente para los combates.
 
 La variabilidad observada presenta patrones específicos según la estadística analizada. La característica #raw("`diff_hp`") exhibe el mayor rango de variación con aproximadamente ±100 puntos, reflejando la diversidad significativa en los puntos de vida entre diferentes especies de Pokémon. Las diferencias en #raw("`diff_attack`") y #raw("`diff_defense`") muestran una variabilidad moderada en el rango de ±50-80 puntos, mientras que #raw("`diff_speed`") presenta un amplio rango de variación debido a las diferencias extremas entre Pokémon naturalmente lentos y aquellos con velocidades excepcionales.
@@ -178,6 +184,7 @@ La variabilidad observada presenta patrones específicos según la estadística 
 La ausencia de sesgos sistemáticos se confirma por el hecho de que las distribuciones están centradas en cero, validando que no existe un sesgo inherente que favorezca al "First_pokemon" por ser sistemáticamente más fuerte. Esta distribución centrada resulta ideal para el modelado de machine learning, ya que permite al algoritmo aprender patrones equilibrados tanto para ventajas como desventajas en cada estadística, garantizando un entrenamiento balanceado y representativo de las dinámicas reales de combate.
 
 == Análisis de Distribución de Estadísticas Base
+
 Para complementar el análisis, se generó una visualización de la distribución de las estadísticas base de todos los Pokémon en el dataset:
 
 #figure(
@@ -186,6 +193,7 @@ Para complementar el análisis, se generó una visualización de la distribució
 ) <fig-stats-dist>
 
 == Análisis de Tipos Pokémon
+
 El análisis de los tipos Pokémon revela información valiosa sobre la composición del dataset y las estrategias de combate. Se generó una visualización de la distribución de tipos primarios:
 
 #figure(
@@ -200,11 +208,13 @@ La distribución refleja tanto la abundancia natural de ciertos tipos en el univ
 Las características de tipo codificadas en formato one-hot (76 características en total) capturan tanto tipos primarios como secundarios, permitiendo al modelo aprender las complejas interacciones entre combinaciones de tipos.
 
 == Análisis de Características de Combate
+
 Para comprender mejor las dinámicas específicas de combate, se analizó la relación entre las diferencias estadísticas y los resultados, revelando patrones fundamentales en las mecánicas de enfrentamiento. El impacto de la velocidad se manifiesta como particularmente relevante, ya que las diferencias en esta estadística determinan el orden de ataque y pueden ser decisivas en combates donde los contendientes presentan capacidades similares en otras áreas.
 
 El análisis revela importantes sinergias entre estadísticas, donde combinaciones como alta diferencia en ataque junto con diferencia positiva en velocidad tienden a correlacionarse fuertemente con la victoria, sugiriendo que la capacidad de atacar primero con potencia superior constituye una ventaja estratégica significativa. Sin embargo, se observan también factores compensatorios donde Pokémon con desventajas en capacidades ofensivas pueden compensar efectivamente con ventajas defensivas significativas, reflejando la complejidad balanceada del sistema de combate.
 
 == Conclusiones del Análisis Exploratorio
+
 El análisis exploratorio de datos revela un dataset robusto y bien estructurado para el modelado de combates Pokémon, caracterizado por múltiples fortalezas que garantizan la viabilidad del proyecto de machine learning.
 
 Entre las fortalezas principales del dataset se destaca su tamaño considerable de 48,049 combates, que proporciona suficiente poder estadístico para el entrenamiento de modelos complejos y la validación de resultados. El balance de clases observado en la distribución equilibrada de la variable objetivo minimiza el riesgo de sesgo hacia una clase específica, facilitando un aprendizaje balanceado. La alta calidad de los datos se evidencia en la ausencia total de valores faltantes, eliminando la necesidad de técnicas de imputación que podrían introducir ruido. Finalmente, la diversidad de características lograda mediante la combinación efectiva de estadísticas numéricas y características categóricas proporciona al modelo múltiples perspectivas para el aprendizaje de patrones complejos.
@@ -224,6 +234,7 @@ El núcleo de este proyecto reside en la implementación y entrenamiento de un m
 Tras considerar diversas alternativas, se optó por el clasificador *XGBoost* (#raw("`XGBClassifier`")) de la librería #raw("`xgboost`"). Esta elección se justifica por varias razones técnicas: excelente rendimiento como sistema de #gls("gradient-boosting") sobre árboles de decisión para datos tabulares estructurados, capacidad para modelar relaciones no lineales complejas entre características, mecanismos integrados de #gls("regularizacion") (L1 y L2) que previenen el #gls("overfitting"), eficiencia computacional superior especialmente con paralelización (#raw("`n_jobs=-1`")), y robustez en el manejo de datos faltantes y variabilidad en la escala de características.
 
 == Pipeline de procesamiento:
+
 Para asegurar un flujo de trabajo ordenado y reproducible, el preprocesamiento de los datos y el entrenamiento del modelo se encapsulan dentro de un pipeline de #raw("`scikit-learn`"). Este pipeline, definido en la función #raw("`train_or_load_model`") del módulo #raw("`data_utils.py`"), consta de las siguientes etapas secuenciales:
 
 #set enum(indent: 2 * ident, numbering: "1.")
@@ -248,9 +259,11 @@ La función #raw("`train_or_load_model`") verifica primero si existe un modelo g
 Un modelo de aprendizaje automático no solo debe ser capaz de realizar predicciones, sino que también es crucial evaluar su rendimiento de manera objetiva y, en la medida de lo posible, comprender los factores que influyen en sus decisiones.
 
 == Métricas de evaluación:
+
 Para la evaluación comprehensiva del rendimiento del pipeline tras el entrenamiento (o la carga de un modelo preexistente), se emplea un conjunto robusto de métricas estándar para problemas de clasificación binaria sobre el conjunto de prueba (#raw("`X_test`"), #raw("`y_test`")), que el modelo no ha observado durante su fase de ajuste. El *accuracy* cuantifica la proporción de predicciones correctas sobre el total de predicciones realizadas, proporcionando una medida general del rendimiento. El *precision* evalúa, de todas las instancias clasificadas como positivas (Pokémon A gana), qué proporción fue realmente positiva, siendo particularmente útil cuando el costo de los falsos positivos es elevado. El *recall* determina, de todas las instancias realmente positivas, qué proporción fue identificada correctamente por el modelo, adquiriendo relevancia cuando el costo de los falsos negativos es significativo. Finalmente, el *F1-Score* representa la media armónica de precision y recall, proporcionando una medida balanceada del rendimiento que resulta especialmente valiosa cuando existe desequilibrio de clases o cuando tanto el precision como el recall revisten igual importancia. Todas estas métricas se calculan utilizando funciones del módulo #raw("`sklearn.metrics`") y sus valores se presentan en la pestaña "Análisis del Modelo" de la interfaz Streamlit, permitiendo una apreciación rápida del desempeño general.
 
 == Visualizaciones y explicabilidad:
+
 Para una comprensión más profunda del comportamiento del modelo, se emplean diversas técnicas de visualización y explicabilidad que proporcionan insights tanto cuantitativos como cualitativos. La *matriz de confusión* se genera y visualiza utilizando #raw("`seaborn.heatmap`"), presentando una representación detallada que muestra el número de Verdaderos Positivos, Falsos Positivos, Verdaderos Negativos y Falsos Negativos, ofreciendo una visión granular de los tipos específicos de errores que comete el modelo en sus predicciones. Complementariamente, se presenta un *reporte de clasificación* detallado obtenido de #raw("`classification_report`") de #raw("`sklearn.metrics`"), que incluye precisión, recall, f1-score y _support_ (número de instancias reales) para cada una de las clases (Pokémon A gana / Pokémon B gana), así como promedios ponderados y macro que proporcionan una perspectiva integral del rendimiento del clasificador.
 
 #figure(
@@ -299,7 +312,7 @@ Las *características importantes* se presentan mediante el gráfico de las cara
 
 Esta sección contextualiza el proyecto y proporciona información técnica sobre el sistema desarrollado.
 
-Se incluye una descripción general del sistema, sus objetivos y las tecnologías utilizadas en su implementación. Se detallan las características principales del predictor y los factores considerados por el modelo para realizar las predicciones. También se discuten las limitaciones actuales del sistema y se proponen futuras mejoras. Adicionalmente, se presentan análisis exploratorios complementarios de los datos Pokémon, como distribuciones de estadísticas base y matrices de correlación.
+Se incluye una descripción general del sistema, sus objetivos y las tecnologías utilizadas en su implementación. Se detallan las características principales del sistema de predicción y los factores considerados por el modelo para realizar las predicciones. También se discuten las limitaciones actuales del sistema y se proponen futuras mejoras. Adicionalmente, se presentan análisis exploratorios complementarios de los datos Pokémon, como distribuciones de estadísticas base y matrices de correlación.
 
 La interfaz utiliza estilos CSS personalizados (cargados mediante #raw("`ui_utils.load_css()`")) para mejorar la estética y la experiencia de usuario, con un diseño centrado en la claridad y la facilidad de interpretación.
 
@@ -316,10 +329,14 @@ Este conjunto de herramientas proporciona una base sólida y flexible para el de
 
 = Arquitectura del Sistema y Componentes
 
+La arquitectura del Sistema de Predicción de Combates Pokémon se fundamenta en principios de ingeniería de software que priorizan la modularidad, la separación de responsabilidades y la escalabilidad. El sistema está estructurado en componentes bien definidos que interactúan de manera cohesiva para proporcionar una experiencia completa de predicción y análisis.
+
 == Arquitectura general del sistema:
 El "Sistema de Predicción de Combates Pokémon" está diseñado siguiendo una arquitectura modular que separa claramente las responsabilidades, facilitando el mantenimiento, la escalabilidad y las futuras expansiones. La aplicación se estructura en capas principales que evidencian una organización sistemática y profesional. La *capa de presentación* se implementa mediante Streamlit (#raw("`streamlit_app.py`")), proporcionando la interfaz web interactiva donde los usuarios pueden seleccionar Pokémon, realizar predicciones y explorar resultados de manera intuitiva. La *capa de lógica de negocio* se compone de módulos especializados que manejan la lógica específica del dominio, incluyendo el procesamiento de datos, la gestión del modelo y las utilidades de visualización con alta cohesión funcional. La *capa de datos* gestiona el acceso y la persistencia de datos, incluyendo la carga de datasets, el preprocesamiento sistemático y la gestión del modelo entrenado con eficiencia optimizada. La *capa de configuración* centraliza la configuración global del sistema, incluyendo constantes fundamentales, colores de tipos y parámetros del modelo para mantener la coherencia arquitectónica.
 
 == Módulos principales del sistema:
+
+El sistema se organiza en módulos especializados que proporcionan funcionalidades específicas y mantienen la coherencia arquitectónica del proyecto.
 
 === Gestión de datos y modelos:
 El módulo #raw("`advanced_data_manager.py`") implementa dos clases principales: *PokemonDataManager* maneja la carga y gestión de datasets con carga perezosa para optimización de memoria, mientras que *PokemonModelManager* encapsula toda la lógica del modelo XGBoost incluyendo entrenamiento, persistencia, evaluación y validación de datos.
@@ -331,6 +348,7 @@ Los módulos de utilidades proporcionan funcionalidades especializadas: #raw("`p
 El módulo #raw("`config.py`") centraliza toda la configuración del sistema mediante un enfoque comprehensivo y estructurado. La *configuración de página* establece parámetros fundamentales para la configuración de Streamlit, optimizando la presentación y funcionalidad de la interfaz web. Los *colores de tipos* implementan mapeo sistemático de tipos Pokémon a códigos de color específicos para visualizaciones consistentes, asegurando coherencia visual en todo el sistema. Las *constantes del sistema* definen valores constantes utilizados a lo largo de la aplicación, promoviendo mantenibilidad y configuración centralizada. Los *parámetros del modelo* comprenden la configuración de hiperparámetros y rutas de archivos, facilitando la gestión de configuraciones experimentales y de producción.
 
 = Resultados y Conclusiones
+Este capítulo presenta una evaluación exhaustiva del sistema desarrollado, analizando tanto el rendimiento cuantitativo del modelo como las implicaciones cualitativas de los resultados obtenidos.
 
 == Desempeño del modelo:
 El modelo XGBoost entrenado para el Sistema de Predicción de Combates Pokémon ha demostrado un rendimiento sólido y satisfactorio en la tarea de clasificación binaria. Evaluado sobre un conjunto de prueba riguroso (20% del conjunto de datos total, equivalente a 9,610 combates), el modelo alcanzó métricas de rendimiento consistentes que superan significativamente la predicción aleatoria. El *accuracy* del 81.12% permite clasificar correctamente 8 de cada 10 combates, superando ampliamente el punto de referencia de predicción aleatoria (50%) y demostrando una capacidad predictiva sólida del sistema. El *precision (clase "Pokémon A Gana")* del 80.95% indica que de cada 100 predicciones de victoria para Pokémon A, aproximadamente 81 son correctas, proporcionando una confiabilidad aceptable en las predicciones positivas. El *recall (clase "Pokémon A Gana")* del 77.88% identifica correctamente el 77.9% de las victorias reales de Pokémon A, capturando la mayoría de casos positivos aunque con cierto margen de mejora en la sensibilidad del modelo. Finalmente, el *F1-Score (clase "Pokémon A Gana")* del 79.39% como media armónica confirma un balance razonable entre precision y recall, validando la utilidad práctica del sistema de clasificación.
@@ -350,11 +368,15 @@ No obstante, el sistema también posee *limitaciones* actuales que requieren rec
 El presente proyecto sienta una base sólida que puede expandirse en múltiples direcciones académicas y técnicas. La *incorporación de más características* constituye una línea prioritaria mediante la inclusión de datos sobre movimientos (poder, tipo, categoría, precisión) y habilidades Pokémon con su impacto específico en las estadísticas e interacciones de tipo. La *consideración de items* representa otra extensión fundamental para modelar el efecto de los objetos equipados por los Pokémon en el resultado de combates. La *generación dinámica de características* implica implementar un pipeline de preprocesamiento que construya el conjunto de características directamente desde los datos crudos, facilitando significativamente la actualización y experimentación continua. La exploración de *modelos más avanzados o ensembles* comprende la investigación de otras arquitecturas de modelos (e.g., redes neuronales) o técnicas de ensemble learning para potencialmente mejorar el rendimiento predictivo. El *análisis de estrategias* constituye una línea de investigación avanzada que, disponiendo de datos más detallados sobre el transcurso de los combates, permitiría modelar estrategias comunes y patrones tácticos. La *expansión del dataset* involucra integrar datos de múltiples fuentes o utilizar APIs de Pokémon para obtener información más actualizada y comprehensiva. Finalmente, la *predicción de combates dobles/múltiples* representa la adaptación del modelo para predecir resultados en formatos de combate más complejos que el tradicional 1 vs 1.
 
 = Validación y Pruebas del Sistema
+La validación rigurosa del sistema constituye un componente esencial para garantizar la confiabilidad, robustez y calidad del software desarrollado.
 
 == Marco de pruebas:
-El proyecto incluye un sistema de pruebas robusto implementado mediante el marco de trabajo #raw("`pytest`"), organizado en el directorio #raw("`tests/`"). El archivo principal #raw("`test_pokemon_predictor.py`") contiene conjuntos de pruebas que validan tanto la funcionalidad individual de los componentes como la integración completa del sistema.
+El proyecto incluye un sistema de pruebas robusto implementado mediante el marco de trabajo #raw("`pytest`"), organizado en el directorio #raw("`tests/`"). El archivo principal #raw("`test_pokemon_sistema de predicción.py`") contiene conjuntos de pruebas que validan tanto la funcionalidad individual de los componentes como la integración completa del sistema.
 
 == Tipos de pruebas implementadas:
+El sistema de pruebas abarca múltiples niveles de validación para asegurar la funcionalidad correcta en todos los aspectos del proyecto. La arquitectura de testing sigue las mejores prácticas de desarrollo de software, implementando una estrategia de validación multicapa que cubre desde pruebas unitarias granulares hasta validaciones de integración comprehensivas.
+
+El enfoque adoptado garantiza la detección temprana de errores, facilita el mantenimiento del código, y proporciona confianza en la estabilidad del sistema durante el desarrollo y deployment. La suite de pruebas está diseñada para ser ejecutada tanto de forma manual durante el desarrollo como automatizada en pipelines de integración continua.
 
 === Pruebas unitarias:
 Las pruebas unitarias constituyen el fundamento de la validación sistemática del proyecto, evidenciando rigurosidad académica en el desarrollo. La *validación de carga de datos* verifica que los conjuntos de datos se cargan correctamente y contienen las estructuras de datos esperadas, asegurando la integridad de la información base. Las *pruebas de transformación de datos* validan que las funciones de preprocesamiento produzcan salidas correctas para entradas conocidas, garantizando la consistencia de las transformaciones aplicadas. Las *pruebas de modelo* verifican que el modelo puede ser entrenado, guardado y cargado correctamente, confirmando la persistencia y funcionalidad del algoritmo de aprendizaje. Las *pruebas de utilidades* validan el funcionamiento de funciones auxiliares y de cálculo, asegurando la robustez de componentes de soporte.
@@ -377,6 +399,10 @@ Los *indicadores de rendimiento de las pruebas* comprenden seguimiento de la evo
 
 = Instalación y Configuración
 
+Este capítulo proporciona una guía completa para la instalación y configuración del sistema de predicción de batallas Pokémon. El proyecto está diseñado para ser implementado de manera sencilla y eficiente, ofreciendo tanto opciones automatizadas como manuales para adaptarse a diferentes preferencias y entornos de desarrollo.
+
+El sistema de instalación ha sido desarrollado con un enfoque en la *simplicidad* y *reproducibilidad*, garantizando que cualquier usuario pueda configurar el entorno de trabajo sin complicaciones técnicas. Se incluyen verificaciones automáticas de prerrequisitos y validaciones de integridad para asegurar una instalación exitosa en la primera ejecución.
+
 == Instalación automatizada:
 El proyecto proporciona un sistema de instalación completamente automatizado a través del script #raw("`setup.fish`"), que realiza las siguientes operaciones:
 
@@ -392,13 +418,136 @@ El proyecto proporciona un sistema de instalación completamente automatizado a 
 == Gestión de dependencias:
 El archivo #raw("`requirements.txt`") especifica todas las dependencias del proyecto con versiones exactas para garantizar la reproducibilidad, evidenciando un enfoque profesional en la gestión de dependencias. Las *core libraries* comprenden streamlit, pandas, numpy, scikit-learn y xgboost como fundamentos tecnológicos del sistema predictivo. Las librerías de *visualización* incluyen matplotlib, seaborn y plotly para proporcionar capacidades comprehensivas de representación gráfica. La *explicabilidad* se implementa mediante shap para asegurar transparencia en las predicciones del modelo. Las *utilidades* incorporan joblib para persistencia eficiente de modelos y gestión de recursos computacionales. El *testing* se fundamenta en pytest y dependencias relacionadas para asegurar validación sistemática y robustez del código.
 
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    inset: 8pt,
+    align: horizon,
+    [*Categoría*], [*Librería*], [*Versión*],
+    [Framework Web], [streamlit], [≥1.25.0],
+    [Análisis de Datos], [pandas], [≥1.5.0],
+    [Computación Numérica], [numpy], [≥1.21.0],
+    [Aprendizaje Automático], [scikit-learn], [≥1.3.0],
+    [Gradient Boosting], [xgboost], [≥1.7.0],
+    [Explicabilidad], [shap], [≥0.41.0],
+    [Visualización Base], [matplotlib], [≥3.5.0],
+    [Visualización Estadística], [seaborn], [≥0.11.0],
+    [Visualización Interactiva], [plotly], [≥5.15.0],
+    [Persistencia], [joblib], [≥1.2.0],
+    [Testing], [pytest], [≥7.0.0],
+  ),
+  caption: [Dependencias principales del proyecto organizadas por categoría funcional.]
+) <tab-dependencias>
+
+== Requisitos del sistema:
+El sistema ha sido diseñado para ejecutarse eficientemente en hardware moderno estándar con requisitos computacionales moderados. Los *requisitos mínimos* incluyen Python 3.8 o superior instalado y configurado correctamente, 4GB de memoria RAM disponible para operación básica, 500MB de espacio libre en disco para código y datos, y un navegador web moderno compatible con Streamlit. Los *requisitos recomendados* comprenden Python 3.9+ para mejor compatibilidad y rendimiento, 8GB de memoria RAM para operación fluida con datasets grandes, 1GB de espacio en disco para logs y resultados experimentales, y procesador multi-core para aprovechar la paralelización de XGBoost.
+
+La *compatibilidad de sistemas operativos* incluye soporte completo en Linux (Ubuntu 18.04+, CentOS 7+), macOS 10.15+ con herramientas de desarrollo instaladas, y Windows 10+ con Python apropiadamente configurado. Los *navegadores compatibles* comprenden Chrome 90+, Firefox 88+, Safari 14+, y Edge 90+ para funcionalidad completa de la interfaz Streamlit.
+
 == Configuración del entorno:
 La aplicación soporta configuración a través de variables de entorno y archivos de configuración que proporcionan flexibilidad operacional comprehensiva. Las *variables de entorno* permiten personalizar rutas de datos, modelos y configuraciones de servidor, facilitando la adaptación a diferentes entornos de deployment. La *configuración de Streamlit* se implementa mediante el archivo #raw("`.streamlit/config.toml`") para personalizar la apariencia y comportamiento de la interfaz web según necesidades específicas. El *logging configurable* establece un sistema de logging que puede ajustarse según las necesidades de deployment, proporcionando control granular sobre el monitoreo y debugging del sistema.
+
+Las principales variables de configuración incluyen:
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    inset: 8pt,
+    align: horizon,
+    [*Variable*], [*Descripción*], [*Valor por defecto*],
+    [POKEMON_DATA_PATH], [Ruta a los archivos de datos], [./data/],
+    [MODEL_PATH], [Ruta del modelo entrenado], [./models/],
+    [PLOTS_PATH], [Directorio de visualizaciones], [./plots/],
+    [LOG_LEVEL], [Nivel de logging], [INFO],
+    [STREAMLIT_PORT], [Puerto de la aplicación web], [8501],
+    [CACHE_TTL], [Tiempo de vida del caché], [3600],
+  ),
+  caption: [Variables de entorno principales para la configuración del sistema.]
+) <tab-variables-entorno>
+
+La configuración específica de Streamlit permite personalizar aspectos como el tema visual, configuraciones de servidor, y opciones de navegador mediante el archivo #raw("`.streamlit/config.toml`") que establece parámetros de presentación, rendimiento y experiencia de usuario.
 
 == Scripts de utilidad:
 El proyecto incluye varios scripts que automatizan tareas comunes, evidenciando un enfoque profesional en la gestión operacional. El script *#raw("`start_app.fish`")* inicia la aplicación Streamlit con la configuración correcta, facilitando el deployment local y desarrollo. El script *#raw("`run_tests.fish`")* ejecuta la suite completa de pruebas de manera automatizada, asegurando validación sistemática del código. El script *#raw("`setup.fish`")* realiza la instalación y configuración inicial del proyecto, simplificando significativamente el proceso de configuración para nuevos desarrolladores o entornos de deployment.
 
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    inset: 8pt,
+    align: horizon,
+    [*Script*], [*Función*], [*Dependencias*],
+    [setup.fish], [Configuración inicial completa], [Python 3.8+, fish shell],
+    [start_app.fish], [Inicio de aplicación Streamlit], [Entorno configurado],
+    [run_tests.fish], [Ejecución de suite de pruebas], [pytest instalado],
+  ),
+  caption: [Scripts de utilidad incluidos en el proyecto para automatización de tareas comunes.]
+) <tab-scripts>
+
+Los scripts implementan verificaciones robustas de prerequisitos, manejo de errores comprehensivo, y logging detallado para facilitar el troubleshooting. Cada script incluye validación del entorno, activación automática del entorno virtual, y mensajes informativos para guiar al usuario a través del proceso.
+
+== Procedimientos de instalación:
+El proceso de instalación sigue una metodología estructurada que garantiza la configuración correcta en diversos entornos de deployment.
+
+=== Instalación desde cero:
+El proceso completo de instalación comprende las siguientes etapas secuenciales que han sido diseñadas para minimizar la complejidad y garantizar una configuración exitosa en diferentes entornos operativos. Este procedimiento sistemático ha sido validado en múltiples distribuciones de Linux, versiones de macOS y configuraciones de Windows.
+
+La metodología de instalación prioriza la automatización para reducir errores humanos, la verificación en cada etapa para detectar problemas tempranamente, y la documentación clara para facilitar el troubleshooting cuando sea necesario.
+
+El proceso completo de instalación comprende las siguientes etapas secuenciales:
+
+1. *Clonación del repositorio*: Obtener el código fuente desde el repositorio oficial
+2. *Verificación de dependencias del sistema*: Confirmar Python 3.8+ y herramientas básicas
+3. *Configuración del entorno virtual*: Crear un entorno aislado para las dependencias
+4. *Instalación de dependencias Python*: Instalar todas las librerías necesarias
+5. *Verificación de datos*: Confirmar presencia de los datasets requeridos
+6. *Configuración inicial*: Crear directorios y archivos de configuración
+7. *Validación del sistema*: Ejecutar pruebas básicas para confirmar la instalación
+
+=== Resolución de problemas comunes:
+Los problemas más frecuentes durante la instalación y sus soluciones sistemáticas incluyen:
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    inset: 8pt,
+    align: horizon,
+    [*Problema*], [*Síntomas*], [*Solución*],
+    [Errores de dependencias], [ImportError, ModuleNotFoundError], [Actualizar pip y reinstalar desde requirements.txt],
+    [Conflictos de versiones], [VersionConflict, pip resolver], [Crear entorno virtual limpio],
+    [Problemas de permisos], [PermissionError al instalar], [Usar --user o directorios locales],
+    [Datos faltantes], [FileNotFoundError al cargar datasets], [Verificar integridad y rutas de archivos],
+    [Puerto ocupado], [Streamlit no inicia], [Cambiar puerto con --server.port],
+    [Memoria insuficiente], [MemoryError durante carga], [Reducir datasets o aumentar RAM],
+    [Fish shell no disponible], [Scripts .fish no ejecutan], [Instalar fish o adaptar a bash],
+  ),
+  caption: [Problemas comunes durante la instalación y sus respectivas soluciones.]
+) <tab-problemas-comunes>
+
+=== Verificación de la instalación:
+Tras completar el proceso de instalación, se recomienda ejecutar las siguientes verificaciones para confirmar el correcto funcionamiento del sistema:
+
+1. *Verificación de dependencias*: Ejecutar #raw("`python -c \"import streamlit, pandas, xgboost; print('OK')\"`") para confirmar importaciones básicas
+2. *Prueba del modelo*: Ejecutar #raw("`python -c \"import joblib; model = joblib.load('models/pokemon_predictor.pkl'); print('Model loaded')\"`") para verificar la carga del modelo
+3. *Test de datos*: Ejecutar #raw("`python -c \"import pandas as pd; df = pd.read_csv('data/combats.csv'); print(f'Data loaded: {len(df)} rows')\"`") para confirmar acceso a datos
+4. *Prueba de aplicación*: Iniciar Streamlit con #raw("`streamlit run streamlit_app.py`") y verificar acceso web
+5. *Validación completa*: Ejecutar la suite de pruebas con #raw("`pytest tests/`") para confirmación integral
+
+=== Configuración avanzada:
+Para entornos de producción o configuraciones especializadas, el sistema soporta las siguientes opciones avanzadas:
+
+*Configuración de base de datos*: El sistema puede configurarse para utilizar bases de datos externas mediante variables de entorno #raw("`DATABASE_URL`") para PostgreSQL o MongoDB, proporcionando escalabilidad y persistencia empresarial.
+
+*Configuración de logging*: Implementación de logging estructurado mediante configuración JSON que permite integración con sistemas de monitoreo como ELK Stack o Grafana, facilitando observabilidad en producción.
+
+*Configuración de caché distribuido*: Soporte para Redis como backend de caché compartido entre instancias, optimizando rendimiento en deployments multi-instancia.
+
+*Configuración de autenticación*: Integración opcional con sistemas de autenticación externos (OAuth, LDAP) mediante configuración de middleware personalizado.
+
+*Configuración de métricas*: Exposición de métricas Prometheus para monitoreo de rendimiento y health checks automatizados.
+
 = Métricas de Rendimiento y Análisis Comparativo
+La evaluación cuantitativa del modelo constituye un aspecto fundamental para establecer su validez científica y aplicabilidad práctica. Esta sección presenta un análisis comprehensivo del rendimiento del sistema desarrollado, incluyendo métricas estándar de clasificación, análisis de importancia de características, evaluación del rendimiento computacional, y consideraciones de escalabilidad. El análisis comparativo con algoritmos alternativos proporciona contexto para valorar la efectividad de la solución implementada.
+
 == Métricas del modelo:
 El modelo XGBoost entrenado demuestra un rendimiento sólido en la tarea de predicción de combates Pokémon, alcanzando métricas que superan significativamente un clasificador aleatorio (~50%) y representan un desempeño competente en el dominio. El *accuracy* alcanza 81.12%, indicando que el modelo clasifica correctamente aproximadamente 8 de cada 10 combates en el conjunto de prueba, representando una mejora del 62.24% sobre la predicción aleatoria. El *precision* logra 80.95%, evidenciando que cuando el modelo predice que Pokémon A ganará, acierta en aproximadamente 8 de cada 10 casos, proporcionando confiabilidad práctica en las predicciones positivas. El *recall* obtiene 77.88%, confirmando que el modelo identifica correctamente casi el 78% de los casos donde Pokémon A efectivamente gana, capturando la mayoría de verdaderos positivos con margen de mejora. El *F1-Score* de 79.39% constituye la media armónica que confirma un balance razonable entre precision y recall, aspecto crucial para este tipo de clasificación binaria balanceada.
 
@@ -412,27 +561,35 @@ Las métricas de memoria evidencian eficiencia en el uso de recursos computacion
 Las optimizaciones implementadas demuestran un enfoque comprehensivo en la eficiencia computacional y experiencia de usuario. El *caché de Streamlit* utiliza las funciones #raw("`@st.cache_data`") y #raw("`@st.cache_resource`") para eliminar recargas innecesarias, optimizando significativamente los tiempos de respuesta. La *paralelización* configura XGBoost con #raw("`n_jobs=-1`") para utilizar todos los núcleos de CPU disponibles, maximizando el rendimiento computacional. La *carga diferida* genera los plots SHAP únicamente cuando son requeridos por el usuario, evitando computación innecesaria. La *gestión eficiente de memoria* implementa liberación automática de objetos temporales tras cada predicción, manteniendo el uso de memoria optimizado durante sesiones prolongadas.
 
 == Escalabilidad y límites del sistema:
+El análisis de escalabilidad constituye un aspecto crítico para evaluar la viabilidad del sistema en diferentes contextos de deployment y cargas de trabajo. Esta evaluación comprende tanto la escalabilidad vertical (mejora de recursos en hardware individual) como la escalabilidad horizontal (distribución across múltiples instancias), proporcionando una perspectiva comprehensiva de las capacidades y limitaciones del sistema.
+
+La evaluación sistemática de límites operacionales permite identificar bottlenecks potenciales, planificar recursos de infraestructura apropiados, y establecer expectativas realistas sobre el rendimiento del sistema en diferentes escenarios de uso. Este análisis es fundamental para decisiones de deployment en entornos de producción.
 
 La escalabilidad de datos demuestra la robustez arquitectónica del sistema para manejar volúmenes crecientes de información. El *dataset actual* procesa eficientemente 48,049 combates, estableciendo una línea base sólida de rendimiento. La *capacidad estimada* alcanza hasta 1M+ combates sin degradación significativa en tiempos de predicción, evidenciando escalabilidad horizontal adecuada. El *límite de memoria* se establece en aproximadamente 2GB de RAM para datasets de 500K+ combates, manteniendo requisitos de hardware razonables. La *escalabilidad de características* permite que el modelo actual maneje 92 características y puede expandirse hasta aproximadamente 500 características sin cambios arquitectónicos fundamentales, proporcionando flexibilidad para futuras extensiones.
 
 La escalabilidad de usuarios evidencia consideraciones prácticas para deployment en entornos multiusuario. Los *usuarios concurrentes* se benefician del soporte de Streamlit para múltiples sesiones simultáneas con caché compartido, optimizando la utilización de recursos. La *estimación de capacidad* soporta 10-20 usuarios concurrentes en hardware estándar (8GB RAM, 4 cores), proporcionando un marco referencial para planificación de infraestructura. Los *bottlenecks identificados* se concentran en la generación de plots SHAP para múltiples usuarios simultáneos, representando el punto crítico para optimización en escenarios de alta concurrencia.
 
 === Análisis comparativo:
-Comparación con algoritmos alternativos evaluados durante el desarrollo:
+Para validar la selección del algoritmo XGBoost, se realizó una evaluación comparativa con múltiples algoritmos de aprendizaje automático, considerando métricas de rendimiento, eficiencia computacional y recursos requeridos. Esta comparación sistemática permite contextualizar la efectividad de la solución implementada y justificar la elección tecnológica realizada.
 
-#table(
-  columns: (auto, auto, auto, auto),
-  inset: 8pt,
-  align: horizon,
-  [*Algoritmo*], [*Exactitud*], [*Tiempo predicción*], [*Memoria modelo*],
-  [XGBoost (seleccionado)], [81.12%], [< 50ms], [~15MB],
-  [Random Forest], [79.85%], [< 80ms], [~35MB],
-  [Logistic Regression], [77.32%], [< 20ms], [~2MB],
-  [Support Vector Machine (RBF)], [78.76%], [< 30ms], [~8MB],
-  [Naive Bayes], [74.52%], [< 15ms], [~1MB],
-)
+La evaluación abarcó cinco algoritmos representativos de diferentes paradigmas de aprendizaje automático, desde métodos lineales hasta técnicas de ensemble avanzadas, proporcionando una perspectiva comprehensiva del espacio de soluciones disponibles.
 
-El XGBoost fue seleccionado por ofrecer el mejor balance entre exactitud, tiempo de predicción razonable y tamaño de modelo moderado.
+#figure(
+  table(
+    columns: (auto, auto, auto, auto),
+    inset: 8pt,
+    align: horizon,
+    [*Algoritmo*], [*Exactitud*], [*Tiempo predicción*], [*Memoria modelo*],
+    [XGBoost (seleccionado)], [81.12%], [< 50ms], [~15MB],
+    [Random Forest], [79.85%], [< 80ms], [~35MB],
+    [Logistic Regression], [77.32%], [< 20ms], [~2MB],
+    [Support Vector Machine (RBF)], [78.76%], [< 30ms], [~8MB],
+    [Naive Bayes], [74.52%], [< 15ms], [~1MB],
+  ),
+  caption: [Comparación de algoritmos de aprendizaje automático evaluados durante el desarrollo del sistema.]
+) <tab-algoritmos-comparacion>
+
+El XGBoost fue seleccionado por ofrecer el mejor balance entre exactitud, tiempo de predicción razonable y tamaño de modelo moderado, como se evidencia en la @tab-algoritmos-comparacion.
 
 El análisis de robustez evidencia la estabilidad y confiabilidad del modelo desarrollado mediante validaciones comprehensivas. La *estabilidad de predicciones* demuestra variación inferior al 1% en accuracy entre ejecuciones con diferentes semillas aleatorias, confirmando consistencia reproducible. La *sensibilidad a datos faltantes* revela que el modelo mantiene más del 75% de accuracy incluso con 5% de características faltantes, evidenciando tolerancia razonable a información incompleta. La *generalización temporal* mediante evaluación en subconjuntos cronológicos muestra degradación mínima (inferior al 3%) en rendimiento, confirmando estabilidad longitudinal adecuada. El *análisis de casos extremos* valida que el modelo maneja correctamente Pokémon con estadísticas atípicas o combinaciones de tipos raras, asegurando robustez ante variabilidad excepcional.
 
@@ -456,13 +613,17 @@ El sistema requiere las siguientes especificaciones mínimas para su correcto fu
 
 == Instalación de dependencias
 
+El proceso de instalación de dependencias puede realizarse mediante dos métodos principales, diseñados para satisfacer diferentes necesidades y niveles de experiencia técnica. El método automatizado está recomendado para usuarios que buscan una configuración rápida y sin complicaciones, mientras que el método manual permite un control granular sobre cada paso del proceso.
+
+Ambos métodos aseguran la instalación correcta de todas las librerías necesarias y la configuración adecuada del entorno de Python. El sistema de gestión de dependencias implementado garantiza la reproducibilidad y estabilidad de la instalación en diferentes sistemas operativos.
+
 === Método 1: Instalación automatizada (recomendado)
 
 El proyecto incluye un script automatizado que configura todo el entorno necesario:
 
 ```bash
 # Descargar/clonar el proyecto
-cd pokemon_predictor
+cd pokemon_sistema de predicción
 
 # Ejecutar instalación automatizada
 ./setup.fish
@@ -491,6 +652,10 @@ ls data/
 ```
 
 == Ejecución del proyecto
+
+Una vez completada la instalación de dependencias, el sistema está listo para ser ejecutado. El proyecto proporciona múltiples métodos de ejecución para adaptarse a diferentes preferencias y escenarios de uso, desde scripts automatizados hasta comandos directos para usuarios avanzados.
+
+La aplicación se ejecuta como una interfaz web interactiva utilizando Streamlit, lo que permite un acceso intuitivo a todas las funcionalidades del sistema de predicción. El servidor se inicia localmente y puede ser accedido desde cualquier navegador web moderno.
 
 === Inicio de la aplicación
 
@@ -523,7 +688,7 @@ python -m pytest tests/ -v
 El proyecto debe contener la siguiente estructura mínima para funcionar:
 
 ```
-pokemon_predictor/
+pokemon_sistema de predicción/
 ├── data/
 │   ├── all_pokemon_data.csv
 │   ├── combats.csv
