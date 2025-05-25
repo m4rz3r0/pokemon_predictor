@@ -1,8 +1,17 @@
+#import "@preview/glossarium:0.5.6": make-glossary, register-glossary, print-glossary, gls, glspl
+#show: make-glossary
+
+// Importación del glosario externo
+#import "glossary.typ": glossary-entries
+
+// Registro del glosario
+#register-glossary(glossary-entries)
+
 // =============================================
 // METADATOS Y CONFIGURACIONES GLOBALES
 // =============================================
 #let ident = 2em
-#let meses = ([Enero], [Febrero], [Marzo], [Abril], [Mayo], [Junio], [Julio], [Con el fin de optimizar el tiempo y los recursos, el sistema implementa una estrategia de persistencia para el modelo entrenado. Una vez que el pipeline (incluyendo el escalador y el modelo XGBoost) ha sido entrenado satisfactoriamente, se guarda en disco utilizando la función #raw("`joblib.dump()`") en un archivo con formato #raw("`.pkl`") (específicamente, #raw("`pokemon_battle_model_xgboost.pkl`")).gosto], [Septiembre], [Octubre], [Noviembre], [Diciembre])
+#let meses = ([Enero], [Febrero], [Marzo], [Abril], [Mayo], [Junio], [Julio], [Agosto], [Septiembre], [Octubre], [Noviembre], [Diciembre])
 
 #set text(lang: "es", hyphenate: false, size: 12pt)
 #set par(justify: true, first-line-indent: (amount: ident, all: true), leading: 1em)
@@ -86,7 +95,7 @@ Este problema se enmarca dentro de la clasificación binaria en el ámbito del a
 
 La motivación subyacente a este proyecto se encuentra en la rica complejidad del universo Pokémon. Con cientos de criaturas, cada una con estadísticas, tipos elementales y, potencialmente, habilidades únicas (aunque estas últimas no se consideran en la versión actual del modelo), predecir el desenlace de un combate constituye un reto computacional y analítico de interés. Esta complejidad lo convierte en una aplicación idónea para técnicas modernas de aprendizaje automático.
 
-El proyecto persigue los siguientes objetivos específicos: aplicar de forma práctica los conocimientos adquiridos en ingeniería del conocimiento y aprendizaje automático a un dominio popular y con una cantidad significativa de datos accesibles; desarrollar un modelo predictivo robusto, capaz de identificar patrones y relaciones significativas a partir de registros históricos de combates reales; construir una interfaz web interactiva y amigable que no solamente permita a los usuarios realizar predicciones personalizadas, sino también explorar y comprender los factores determinantes que el modelo considera para sus decisiones; y ofrecer una herramienta que combine el entretenimiento con el aprendizaje, sirviendo tanto a aficionados de Pokémon como a estudiantes interesados en la aplicación de la inteligencia artificial.
+El proyecto persigue aplicar de forma práctica los conocimientos adquiridos en ingeniería del conocimiento a un dominio popular y con una cantidad significativa de datos accesibles; desarrollar un modelo predictivo robusto capaz de identificar patrones y relaciones significativas a partir de registros históricos de combates reales; construir una interfaz web interactiva y amigable que no solamente permita a los usuarios realizar predicciones personalizadas, sino también explorar y comprender los factores determinantes que el modelo considera para sus decisiones; y ofrecer una herramienta que combine el entretenimiento con el aprendizaje, sirviendo tanto a aficionados de Pokémon como a estudiantes interesados en la aplicación de la inteligencia artificial.
 
 El modelo se fundamenta en *características intrínsecas* de los Pokémon, tales como sus estadísticas base (Puntos de Salud, Ataque, Defensa, Ataque Especial, Defensa Especial y Velocidad) y sus tipos elementales (primario y, si existe, secundario). Asimismo, considera las *diferencias relativas* entre las estadísticas de los contendientes, ya que la superioridad o inferioridad en atributos específicos puede ser crucial. Es fundamental destacar que el entrenamiento se realiza utilizando datos de combates reales, lo que confiere mayor validez y aplicabilidad al modelo en comparación con sistemas basados únicamente en simulaciones teóricas.
 
@@ -103,7 +112,7 @@ El tercer elemento integrador corresponde a los *Datos de Características de Co
 == Procesos de carga y limpieza:
 La transformación de los datos crudos en un formato adecuado para el análisis y entrenamiento del modelo es un paso crítico. Este proceso se ha automatizado mediante el script de Python #raw("`clean_data.py`"), que realiza las siguientes operaciones principales:
 
-#set enum(indent: 2 * ident, numbering: "1.")
+#set enum(numbering: "1.")
 + *Validación Inicial*: Verifica la existencia de los archivos de entrada necesarios (#raw("`data/combats.csv`") y #raw("`data/all_pokemon_data.csv`")).
 + *Carga de Datos*: Lee los archivos CSV en DataFrames de Pandas.
 + *Limpieza Preliminar*: Se implementa un proceso de depuración que garantiza la integridad de los datos. En el archivo #raw("`combats.csv`") se eliminan las filas que contengan valores nulos en las columnas identificadoras de los Pokémon y el ganador, además de remover registros duplicados que podrían introducir sesgos. De manera similar, en #raw("`all_pokemon_data.csv`") se procesan las filas duplicadas utilizando el ID del Pokémon como criterio de identificación único.
@@ -114,8 +123,7 @@ La transformación de los datos crudos en un formato adecuado para el análisis 
 + *Filtrado de Combates Inválidos*: Se asegura que el #raw("`winner_id`") en cada combate corresponda efectivamente al #raw("`pokemon_A_id`") o al #raw("`pokemon_B_id`"), descartando registros inconsistentes.
 + *Creación de Variable Objetivo*: Se genera la columna #raw("`target`"), que toma el valor 1 si el Pokémon A es el ganador, y 0 en caso contrario.
 + *Cálculo de Diferencias de Estadísticas*: Para cada estadística base, se calcula la diferencia entre el Pokémon A y el Pokémon B (e.g., #raw("`diff_hp = A_hp - B_hp`")).
-+ *Codificación One-Hot de Tipos*: Las columnas de tipo (#raw("`A_type_1`"), #raw("`A_type_2`"), #raw("`B_type_1`"), #raw("`B_type_2`")) se transforman en múltiples columnas binarias (dummies) mediante codificación one-hot, creando una representación numérica que el modelo puede procesar.
-#set enum(indent: ident)
++ *Codificación One-Hot de Tipos*: Las columnas de tipo (#raw("`A_type_1`"), #raw("`A_type_2`"), #raw("`B_type_1`"), #raw("`B_type_2`")) se transforman en múltiples columnas binarias (dummies) mediante #gls("one-hot-encoding"), creando una representación numérica que el modelo puede procesar.
 
 Finalmente, el script #raw("`clean_data.py`") guarda el DataFrame resultante, con todas las características procesadas y listas para el entrenamiento, en el archivo #raw("`data/combats_features.csv`").
 
@@ -125,8 +133,6 @@ Las funciones de utilidades de la aplicación web (#raw("`data_utils.py`")) se e
 La transformación de los datos brutos en un conjunto de características informativas y relevantes para el modelo constituye un paso crítico en el proceso de desarrollo. Para las predicciones en tiempo real que se realizan a través de la interfaz web, la función #raw("`prepare_prediction_data`") en #raw("`data_utils.py`") construye dinámicamente el vector de características para un par de Pokémon seleccionados mediante un proceso integral que incluye múltiples etapas de procesamiento.
 
 El proceso inicia con la *extracción de estadísticas base*, donde se recuperan las seis estadísticas fundamentales (HP, Ataque, Defensa, Ataque Especial, Defensa Especial, Velocidad) para el Pokémon A y el Pokémon B a partir del DataFrame #raw("`pokemon_df`"). Posteriormente se procede al *cálculo de diferencias de estadísticas*, donde para cada una de las estadísticas base se calcula la diferencia entre el valor del Pokémon A y el del Pokémon B (e.g., #raw("`diff_hp = A_hp - B_hp`")). Estas diferencias relativas proporcionan información más informativa para el modelo que los valores absolutos por sí solos, ya que capturan las ventajas competitivas entre los contendientes.
-
-La *codificación one-hot de tipos* constituye otra etapa fundamental donde los tipos elementales (Type1 y Type2) de cada Pokémon se transforman mediante codificación one-hot. Se utiliza un conjunto predefinido de todos los tipos posibles (extraído de #raw("`TYPE_COLORS`") en #raw("`config.py`")) para generar una columna binaria para cada tipo y para cada Pokémon (e.g., #raw("`A_type_1__Fire`"), #raw("`B_type_2__Water`")). El sistema maneja específicamente el caso de Pokémon con un solo tipo, asignando un valor afirmativo a una característica especial como #raw("`A_type_2__none`") o #raw("`B_type_2__none`").
 
 Finalmente, la *alineación de características* asegura que el DataFrame resultante para la predicción, que contiene las características generadas, se alinee con el conjunto exacto de columnas que el modelo espera como entrada. Estas columnas se definen globalmente como #raw("`MODEL_FEATURE_COLUMNS`") a partir del dataset #raw("`features_df`"). Cualquier característica presente en #raw("`MODEL_FEATURE_COLUMNS`") pero no generada para la instancia de predicción específica se rellena automáticamente con un valor de 0, garantizando la consistencia dimensional requerida por el modelo.
 
@@ -150,7 +156,7 @@ Se comprobó la existencia de valores faltantes en el dataset. El script genera 
 == Distribución de la Variable Objetivo
 Se analizó la distribución de la variable objetivo (#raw("`target`")), que indica si el Pokémon A ganó (1) o perdió (0) el combate. Del análisis de los 48,049 combates en el dataset, se observa una distribución aproximadamente balanceada entre las dos clases, con una ligera tendencia hacia una de ellas. Este balance es favorable para el entrenamiento de modelos de clasificación, ya que reduce el riesgo de sesgo hacia la clase mayoritaria y permite que el modelo aprenda patrones representativos de ambos resultados de combate.
 
-El equilibrio en la variable objetivo es crucial para la validez de las métricas de evaluación como _accuracy_, _precision_ y _recall_, ya que en conjuntos de datos desbalanceados estas métricas pueden ser engañosas.
+El equilibrio en la variable objetivo es crucial para la validez de las métricas de evaluación como #gls("accuracy"), #gls("precision") y #gls("recall"), ya que en conjuntos de datos desbalanceados estas métricas pueden ser engañosas.
 
 == Correlación de Diferencias de Estadísticas con el Objetivo
 Se investigó la correlación entre las diferencias de estadísticas (#raw("`diff_*`")) y la variable objetivo, revelando patrones interpretables que validan la lógica del combate Pokémon. Las características de diferencia muestran correlaciones significativas con el resultado del combate, donde se observan correlaciones positivas para todas las diferencias de estadísticas, indicando que cuando el Pokémon A presenta ventaja en una estadística específica, aumenta la probabilidad de victoria.
@@ -214,8 +220,8 @@ Este análisis establece una base sólida para el desarrollo del modelo XGBoost,
 El núcleo de este proyecto reside en la implementación y entrenamiento de un modelo de aprendizaje automático capaz de discernir patrones en los datos de combate Pokémon y generalizar dichos patrones para realizar predicciones precisas sobre enfrentamientos no vistos previamente.
 
 == Selección del modelo:
-Tras considerar diversas alternativas, se optó por el clasificador *XGBoost* (#raw("`XGBClassifier`")) de la librería #raw("`xgboost`"). Esta elección se justifica por varias razones técnicas:
-La elección del clasificador *XGBoost* (#raw("`XGBClassifier`")) de la librería #raw("`xgboost`") se fundamenta en un análisis exhaustivo de sus capacidades técnicas y su idoneidad para el dominio específico. El algoritmo demuestra un *rendimiento* consistentemente superior como sistema de _gradient boosting_ sobre árboles de decisión, estableciendo estándares elevados en una amplia gama de problemas de clasificación, particularmente destacando en el manejo de datos tabulares estructurados como los que caracterizan este proyecto. Su capacidad para el *manejo de complejidad* permite modelar relaciones no lineales intrincadas entre las características y la variable objetivo, capturando patrones sutiles que métodos más simples podrían pasar por alto. Los mecanismos integrados de *regularización* (L1 y L2) constituyen una fortaleza fundamental al prevenir el sobreajuste, mejorando significativamente la capacidad de generalización del modelo hacia datos no vistos. La *eficiencia* computacional representa otra ventaja clave, caracterizada por velocidades de entrenamiento superiores, especialmente cuando se configura para aprovechar todos los núcleos de procesador disponibles (#raw("`n_jobs=-1`")). Finalmente, su *robustez* se manifiesta en el manejo efectivo de datos faltantes y una menor sensibilidad a la escala de las características comparado con otros algoritmos, aunque se mantiene el escalado como práctica recomendada.
+
+Tras considerar diversas alternativas, se optó por el clasificador *XGBoost* (#raw("`XGBClassifier`")) de la librería #raw("`xgboost`"). Esta elección se justifica por varias razones técnicas: excelente rendimiento como sistema de #gls("gradient-boosting") sobre árboles de decisión para datos tabulares estructurados, capacidad para modelar relaciones no lineales complejas entre características, mecanismos integrados de #gls("regularizacion") (L1 y L2) que previenen el #gls("overfitting"), eficiencia computacional superior especialmente con paralelización (#raw("`n_jobs=-1`")), y robustez en el manejo de datos faltantes y variabilidad en la escala de características.
 
 == Pipeline de procesamiento:
 Para asegurar un flujo de trabajo ordenado y reproducible, el preprocesamiento de los datos y el entrenamiento del modelo se encapsulan dentro de un pipeline de #raw("`scikit-learn`"). Este pipeline, definido en la función #raw("`train_or_load_model`") del módulo #raw("`data_utils.py`"), consta de las siguientes etapas secuenciales:
@@ -232,9 +238,10 @@ La profundidad máxima de cada árbol individual se controla mediante #raw("`max
 La especificación #raw("`objective='binary:logistic'`") define la tarea de aprendizaje como clasificación binaria con función de pérdida logística, permitiendo al modelo emitir probabilidades interpretables. La reproducibilidad se garantiza mediante #raw("`random_state=42`"), que establece la semilla para la generación de números aleatorios, mientras que #raw("`n_jobs=-1`") optimiza el rendimiento computacional utilizando todos los núcleos de CPU disponibles para paralelizar el entrenamiento.
 
 == Persistencia y reutilización:
-Con el fin de optimizar el tiempo y los recursos, el sistema implementa una estrategia de persistencia para el modelo entrenado. Una vez que la línea de procesamiento (incluyendo el escalador y el modelo XGBoost) ha sido entrenada satisfactoriamente, se guarda en disco utilizando la función #raw("`joblib.dump()`") en un archivo con formato #raw("`.pkl`") (específicamente, #raw("`pokemon_battle_model_xgboost.pkl`")).
 
-Al iniciar la aplicación, la función #raw("`train_or_load_model`") primero verifica la existencia de este archivo. Si el modelo guardado existe y no se ha activado la opción de "Forzar reentrenamiento" (#raw("`force_retrain=False`")) en la interfaz, el modelo se carga directamente desde el disco mediante #raw("`joblib.load()`"). Esto evita la necesidad de reentrenar el modelo en cada ejecución de la aplicación, lo cual sería costoso en tiempo, especialmente con conjuntos de datos más grandes o modelos más complejos. El reentrenamiento solo se lleva a cabo si el archivo del modelo no se encuentra o si el usuario solicita explícitamente un nuevo entrenamiento. El tiempo empleado en el proceso de entrenamiento se mide y se informa al usuario a través de la barra lateral de la interfaz Streamlit.
+Para optimizar tiempo y recursos, el sistema implementa persistencia del modelo entrenado. El pipeline completo (escalador y XGBoost) se guarda en disco usando #raw("`joblib.dump()`") en formato #raw("`.pkl`"). 
+
+La función #raw("`train_or_load_model`") verifica primero si existe un modelo guardado. Si existe y no se fuerza reentrenamiento, se carga desde disco. En caso contrario, se entrena un nuevo modelo. El tiempo de entrenamiento se muestra en la interfaz Streamlit.
 
 = Evaluación y Explicabilidad del Modelo
 
@@ -271,17 +278,28 @@ La interacción con el sistema de predicción y el análisis del modelo se facil
 La aplicación, cuyo código principal se encuentra en #raw("`streamlit_app.py`"), está estructurada en pestañas para una organización clara y una navegación intuitiva:
 
 == Pestaña "Predicción de Combate":
-Este es el núcleo interactivo de la aplicación. Permite a los usuarios:
-Este núcleo interactivo de la aplicación permite a los usuarios interactuar comprehensivamente con el sistema de predicción. La *selección de Pokémon* se facilita mediante dos widgets #raw("`st.selectbox`") que permiten seleccionar al Pokémon A y al Pokémon B de una lista completa, complementados por campos de texto (#raw("`st.text_input`")) que filtran dinámicamente la lista de Pokémon por nombre para optimizar la búsqueda. Una vez seleccionados, se despliegan *tarjetas de Pokémon* informativas para cada contendiente (#raw("`ui_utils.show_pokemon_card`")), presentando el sprite (imagen) del Pokémon, su nombre, sus tipos elementales con colores distintivos definidos en #raw("`config.TYPE_COLORS`"), y sus estadísticas base visualizadas mediante barras horizontales que facilitan la comparación rápida. El *análisis de efectividad de tipos* se activa opcionalmente (#raw("`st.checkbox`")) y emplea la función #raw("`plot_utils.generate_type_effectiveness_chart`") para calcular y mostrar textualmente si los ataques de un Pokémon son súper efectivos, normales, no muy efectivos o sin efecto contra el otro, incluyendo el multiplicador de daño correspondiente y complementándose con una visualización gráfica de esta efectividad.
-El sistema integra funcionalidades adicionales que enriquecen la experiencia de predicción. El *historial de combates* presenta, cuando existen registros previos entre los dos Pokémon seleccionados en el dataset #raw("`combats_df`"), estadísticas históricas comprehensivas (#raw("`data_utils.get_historical_results`")) que incluyen el número de victorias para cada contendiente, la tasa de victoria del Pokémon A, y un gráfico de pastel que ilustra visualmente la distribución de estas victorias históricas. La funcionalidad de *predicción* se activa mediante un botón (#raw("`st.button`")) que inicia el proceso de predicción, preparando los datos de entrada y ejecutando la inferencia del modelo entrenado. Los *resultados de la predicción* se presentan con claridad, mostrando cuál Pokémon es el ganador predicho junto con la probabilidad (confianza) asociada, desplegados en una caja estilizada cuyo color y borde varían según el nivel de confianza de la predicción (alta, media, baja), complementados por un gráfico de barras horizontales (#raw("`plot_utils.plot_match_probability`")) que visualiza la probabilidad de victoria de cada contendiente.
 
-Para facilitar la comprensión de las predicciones, el *análisis de factores* ofrece dos visualizaciones complementarias: una *comparación de estadísticas* mediante un gráfico de barras que muestra las diferencias en cada estadística base entre los dos Pokémon (#raw("`ui_utils.calculate_stat_advantage`")), indicando visualmente quién posee la ventaja en cada atributo; y los *factores determinantes (SHAP)* que presentan el "force plot" de SHAP (#raw("`shap_utils.explain_prediction_shap`")) desglosando la contribución específica de cada característica a la predicción actual. Finalmente, los *insights adicionales* se generan dinámicamente como una serie de comentarios analíticos basados en umbrales predefinidos, identificando ventajas significativas en velocidad, superioridad en tipos, diferencias notables en el total de estadísticas base, o patrones dominantes en el historial de combates.
+Esta es la funcionalidad principal de la aplicación, donde los usuarios pueden simular combates entre dos Pokémon y obtener predicciones detalladas sobre el posible resultado.
+
+La *selección de Pokémon* se facilita mediante dos widgets #raw("`st.selectbox`") que permiten seleccionar al Pokémon A y al Pokémon B de una lista completa, complementados por campos de texto (#raw("`st.text_input`")) que filtran dinámicamente la lista de Pokémon por nombre para optimizar la búsqueda. Una vez seleccionados, se despliegan *tarjetas de Pokémon* informativas para cada contendiente (#raw("`ui_utils.show_pokemon_card`")), presentando el sprite (imagen) del Pokémon, su nombre, sus tipos elementales con colores distintivos definidos en #raw("`config.TYPE_COLORS`"), y sus estadísticas base visualizadas mediante barras horizontales que facilitan la comparación rápida.
+
+El *análisis de efectividad de tipos* se activa opcionalmente (#raw("`st.checkbox`")) y emplea la función #raw("`plot_utils.generate_type_effectiveness_chart`") para calcular y mostrar textualmente si los ataques de un Pokémon son súper efectivos, normales, no muy efectivos o sin efecto contra el otro, incluyendo el multiplicador de daño correspondiente y complementándose con una visualización gráfica de esta efectividad.
+
+La funcionalidad de *predicción* se activa mediante un botón (#raw("`st.button`")) que inicia el proceso de predicción, preparando los datos de entrada y ejecutando la inferencia del modelo entrenado. Los *resultados de la predicción* se presentan con claridad, mostrando cuál Pokémon es el ganador predicho junto con la probabilidad (confianza) asociada, desplegados en una caja estilizada cuyo color y borde varían según el nivel de confianza de la predicción (alta, media, baja), complementados por un gráfico de barras horizontales (#raw("`plot_utils.plot_match_probability`")) que visualiza la probabilidad de victoria de cada contendiente.
+
+Para facilitar la comprensión de las predicciones, el *análisis de factores* ofrece dos visualizaciones complementarias: una *comparación de estadísticas* mediante un gráfico de barras que muestra las diferencias en cada estadística base entre los dos Pokémon (#raw("`ui_utils.calculate_stat_advantage`")), indicando visualmente quién posee la ventaja en cada atributo; y los *factores determinantes (SHAP)* que presentan el "force plot" de SHAP (#raw("`shap_utils.explain_prediction_shap`")) desglosando la contribución específica de cada característica a la predicción actual.
 
 == Pestaña "Análisis del Modelo":
-Esta sección está dedicada a proporcionar una visión general comprehensiva del modelo y los datos subyacentes que sustentan el sistema de predicción. Las *características importantes* se presentan mediante el gráfico de las características más influyentes para el modelo XGBoost, permitiendo comprender qué atributos son generalmente más relevantes para predecir el resultado de un combate y proporcionando insights sobre los factores que determinan las decisiones del algoritmo. La *distribución de Pokémon por tipo primario* se visualiza a través de un gráfico de barras que ilustra la cantidad de Pokémon pertenecientes a cada tipo primario, utilizando los colores distintivos definidos en #raw("`TYPE_COLORS`") para facilitar la identificación inmediata y comprensión de la diversidad tipológica del dataset. El *rendimiento del modelo* se documenta mediante la presentación de las métricas de evaluación clave (Exactitud, Precisión, Exhaustividad, Puntuación F1) obtenidas sobre el conjunto de prueba, acompañadas de una visualización detallada de la Matriz de Confusión y un Reporte de Clasificación comprehensivo, lo que permite realizar un análisis exhaustivo del comportamiento y capacidades predictivas del modelo.
+
+Esta sección proporciona una visión técnica del modelo entrenado y permite a los usuarios comprender mejor cómo funciona el sistema de predicción.
+
+Las *características importantes* se presentan mediante el gráfico de las características más influyentes para el modelo XGBoost, permitiendo comprender qué atributos son generalmente más relevantes para predecir el resultado de un combate. La *distribución de Pokémon por tipo primario* se visualiza a través de un gráfico de barras que ilustra la diversidad tipológica del dataset. El *rendimiento del modelo* se documenta mediante las métricas de evaluación clave (Exactitud, Precisión, Exhaustividad, Puntuación F1) obtenidas sobre el conjunto de prueba, acompañadas de la Matriz de Confusión y un Reporte de Clasificación detallado.
 
 == Pestaña "Acerca de":
-Proporciona información contextual comprehensiva sobre el proyecto, integrando elementos descriptivos y analíticos que contextualizan el sistema desarrollado. La sección incluye una descripción general del sistema que abarca sus objetivos fundamentales y las tecnologías utilizadas en su implementación, seguida de un detalle de las características principales del predictor que define sus capacidades distintivas. Se presenta una enumeración sistemática de los factores considerados por el modelo para realizar las predicciones, proporcionando transparencia sobre los elementos que influyen en las decisiones algorítmicas. La discusión de las limitaciones actuales del sistema ofrece una evaluación crítica y honesta de las restricciones presentes, mientras que las propuestas para futuras mejoras y expansiones delinean las oportunidades de evolución del proyecto. Adicionalmente, se incluyen análisis exploratorios complementarios de los datos Pokémon, como un boxplot de la distribución de las estadísticas base y una matriz de correlación entre ellas, que enriquecen la comprensión del dominio de datos subyacente.
+
+Esta sección contextualiza el proyecto y proporciona información técnica sobre el sistema desarrollado.
+
+Se incluye una descripción general del sistema, sus objetivos y las tecnologías utilizadas en su implementación. Se detallan las características principales del predictor y los factores considerados por el modelo para realizar las predicciones. También se discuten las limitaciones actuales del sistema y se proponen futuras mejoras. Adicionalmente, se presentan análisis exploratorios complementarios de los datos Pokémon, como distribuciones de estadísticas base y matrices de correlación.
 
 La interfaz utiliza estilos CSS personalizados (cargados mediante #raw("`ui_utils.load_css()`")) para mejorar la estética y la experiencia de usuario, con un diseño centrado en la claridad y la facilidad de interpretación.
 
@@ -318,10 +336,6 @@ El módulo #raw("`config.py`") centraliza toda la configuración del sistema med
 El modelo XGBoost entrenado para el Sistema de Predicción de Combates Pokémon ha demostrado un rendimiento sólido y satisfactorio en la tarea de clasificación binaria. Evaluado sobre un conjunto de prueba riguroso (20% del conjunto de datos total, equivalente a 9,610 combates), el modelo alcanzó métricas de rendimiento consistentes que superan significativamente la predicción aleatoria. El *accuracy* del 81.12% permite clasificar correctamente 8 de cada 10 combates, superando ampliamente el punto de referencia de predicción aleatoria (50%) y demostrando una capacidad predictiva sólida del sistema. El *precision (clase "Pokémon A Gana")* del 80.95% indica que de cada 100 predicciones de victoria para Pokémon A, aproximadamente 81 son correctas, proporcionando una confiabilidad aceptable en las predicciones positivas. El *recall (clase "Pokémon A Gana")* del 77.88% identifica correctamente el 77.9% de las victorias reales de Pokémon A, capturando la mayoría de casos positivos aunque con cierto margen de mejora en la sensibilidad del modelo. Finalmente, el *F1-Score (clase "Pokémon A Gana")* del 79.39% como media armónica confirma un balance razonable entre precision y recall, validando la utilidad práctica del sistema de clasificación.
 
 Estas métricas sitúan al modelo en un rango de rendimiento competente para problemas de clasificación en dominios complejos, con un accuracy superior al 80% que representa un desempeño sólido y práctico. La matriz de confusión (@fig-conf-matrix) y el reporte de clasificación detallado corroboran este desempeño, mostrando una distribución equilibrada de errores entre ambas clases y confirmando la ausencia de sesgos sistemáticos.
-
-*Nota Técnica sobre Métricas del Sistema:* Las métricas presentadas (Accuracy: 81.12%, Precision: 80.95%, Recall: 77.88%, F1-Score: 79.39%) son consistentes tanto en la aplicación web Streamlit como en la evaluación del modelo, ya que ambas utilizan la misma metodología de división de datos con `train_test_split` y el mismo `random_state=42`. Esta coherencia garantiza la reproducibilidad de los resultados y la confiabilidad de las métricas reportadas, representando la evaluación técnicamente correcta del desempeño del sistema sobre el conjunto de prueba reservado.
-
-El análisis de importancia de características (@fig-feature-importance), complementado con las explicaciones individuales proporcionadas por SHAP, revela patrones de decisión intuitivos y consistentes con el conocimiento experto del dominio Pokémon. Las características más influyentes incluyen:
 
 El análisis de importancia de características (@fig-feature-importance), complementado con las explicaciones individuales proporcionadas por SHAP, revela patrones de decisión intuitivos y consistentes con el conocimiento experto del dominio Pokémon. Las características más influyentes demuestran que los *tipos Pokémon dominantes* como Fighting, Dragon, Normal, Steel, Ice, Grass, Bug y Dark emergen como los factores más determinantes, reflejando sus roles estratégicos únicos en el meta-juego y sus ventajas inherentes en diferentes contextos de combate. Las *ventajas de tipo estratégicas* evidencian que el modelo ha aprendido efectivamente las complejas interacciones entre tipos, como la superioridad reconocida de Fighting contra Normal y Steel, demostrando una comprensión sofisticada de las mecánicas de combate Pokémon. El *balance entre combatientes* se confirma mediante la presencia equilibrada de características tanto del Pokémon A como del B en el top 10, validando que el modelo evalúa objetivamente ambos contendientes sin sesgo posicional o favoritismo hacia algún participante específico.
 
@@ -412,259 +426,156 @@ Comparación con algoritmos alternativos evaluados durante el desarrollo:
   align: horizon,
   [*Algoritmo*], [*Exactitud*], [*Tiempo predicción*], [*Memoria modelo*],
   [XGBoost (seleccionado)], [81.12%], [< 50ms], [~15MB],
-  [Bosque Aleatorio], [79.85%], [< 80ms], [~35MB],
-  [Regresión Logística], [77.32%], [< 20ms], [~2MB],
-  [Máquinas de Vectores de Soporte (RBF)], [78.76%], [< 30ms], [~8MB],
-  [Bayes Ingenuo], [74.52%], [< 15ms], [~1MB],
+  [Random Forest], [79.85%], [< 80ms], [~35MB],
+  [Logistic Regression], [77.32%], [< 20ms], [~2MB],
+  [Support Vector Machine (RBF)], [78.76%], [< 30ms], [~8MB],
+  [Naive Bayes], [74.52%], [< 15ms], [~1MB],
 )
 
 El XGBoost fue seleccionado por ofrecer el mejor balance entre exactitud, tiempo de predicción razonable y tamaño de modelo moderado.
 
 El análisis de robustez evidencia la estabilidad y confiabilidad del modelo desarrollado mediante validaciones comprehensivas. La *estabilidad de predicciones* demuestra variación inferior al 1% en accuracy entre ejecuciones con diferentes semillas aleatorias, confirmando consistencia reproducible. La *sensibilidad a datos faltantes* revela que el modelo mantiene más del 75% de accuracy incluso con 5% de características faltantes, evidenciando tolerancia razonable a información incompleta. La *generalización temporal* mediante evaluación en subconjuntos cronológicos muestra degradación mínima (inferior al 3%) en rendimiento, confirmando estabilidad longitudinal adecuada. El *análisis de casos extremos* valida que el modelo maneja correctamente Pokémon con estadísticas atípicas o combinaciones de tipos raras, asegurando robustez ante variabilidad excepcional.
 
-El análisis de robustez revela que el modelo mantiene una precisión predictiva sólida incluso ante variaciones significativas en los datos de entrada. La sensibilidad a datos faltantes demuestra que el sistema preserva más del 75% de su exactitud incluso cuando el 5% de las características están ausentes, lo cual representa una fortaleza importante para aplicaciones en tiempo real donde pueden existir datos incompletos. La evaluación de generalización temporal, realizada mediante la división cronológica de los datos, muestra una degradación mínima del rendimiento inferior al 3%, confirmando que el modelo no está sobreajustado a patrones temporales específicos. Finalmente, el análisis de casos extremos valida que el sistema gestiona apropiadamente Pokémon con estadísticas atípicas o combinaciones de tipos poco frecuentes, manteniendo predicciones coherentes y estables.
-
 = Anexo: Instrucciones de Ejecución
 
-== Requisitos del sistema:
-El sistema ha sido diseñado para ejecutarse en múltiples plataformas, incluyendo distribuciones Linux, macOS y Windows, aunque se recomienda especialmente el uso de sistemas Linux o macOS para aprovechar las funcionalidades avanzadas de los scripts de automatización escritos en Fish Shell. En cuanto a los requisitos de software, es indispensable contar con Python versión 3.8 o superior, dado que el proyecto utiliza características modernas del lenguaje y librerías que requieren esta versión mínima.
+Este anexo proporciona las instrucciones detalladas necesarias para instalar las dependencias y ejecutar el proyecto localmente.
 
-Los requisitos de hardware incluyen un mínimo de 4GB de memoria RAM, aunque se recomienda disponer de 8GB para garantizar un rendimiento óptimo durante las tareas de entrenamiento del modelo y generación de visualizaciones complejas. El espacio de almacenamiento necesario es aproximadamente 500MB, considerando el proyecto completo con todos los conjuntos de datos, modelos entrenados y gráficos generados. Adicionalmente, se requiere una conexión estable a internet durante la instalación inicial para descargar las dependencias de Python y, si es necesario, los conjuntos de datos actualizados.
+== Requisitos del sistema
 
-== Instalación paso a paso:
+El sistema requiere las siguientes especificaciones mínimas para su correcto funcionamiento:
 
-=== Instalación rápida (recomendada):
-```fish
-# Clonar o descargar el proyecto
+*Software requerido:*
+- Python 3.8 o superior
+- Sistema operativo: Linux, macOS o Windows (se recomienda Linux/macOS)
+- Navegador web moderno para la interfaz Streamlit
+
+*Hardware recomendado:*
+- Memoria RAM: mínimo 4GB, recomendado 8GB
+- Espacio en disco: 500MB libres
+- Conexión a internet (solo durante la instalación)
+
+== Instalación de dependencias
+
+=== Método 1: Instalación automatizada (recomendado)
+
+El proyecto incluye un script automatizado que configura todo el entorno necesario:
+
+```bash
+# Descargar/clonar el proyecto
 cd pokemon_predictor
 
 # Ejecutar instalación automatizada
 ./setup.fish
 
-# Iniciar la aplicación
-./start_app.fish
+# Verificar que la instalación fue exitosa
+./run_tests.fish
 ```
 
-=== Instalación manual:
-```fish
+=== Método 2: Instalación manual
+
+Si prefiere realizar la instalación paso a paso:
+
+```bash
 # Crear entorno virtual
 python3 -m venv venv
-source venv/bin/activate.fish
+
+# Activar entorno virtual
+source venv/bin/activate
 
 # Instalar dependencias
 pip install -r requirements.txt
 
-# Verificar datos (descargar si es necesario)
-ls data/  # Debe contener all_pokemon_data.csv, combats.csv, combats_features.csv
+# Verificar que los datos están presentes
+ls data/
+# Debe mostrar: all_pokemon_data.csv, combats.csv, combats_features.csv
+```
 
-# Iniciar aplicación
+== Ejecución del proyecto
+
+=== Inicio de la aplicación
+
+```bash
+# Método 1: Script automatizado
+./start_app.fish
+
+# Método 2: Comando directo
+source venv/bin/activate
 streamlit run streamlit_app.py
 ```
 
-== Configuración avanzada:
+La aplicación se abrirá automáticamente en el navegador en la dirección `http://localhost:8501`.
 
-=== Variables de entorno:
-```fish
-# Personalizar rutas
-export POKEMON_MODEL_PATH="models/custom_model.pkl"
-export POKEMON_DATA_DIR="data/custom/"
-export STREAMLIT_SERVER_PORT=8502
-```
+=== Verificación del funcionamiento
 
-=== Configuración de Streamlit:
-Crear archivo #raw("`.streamlit/config.toml`"):
-```toml
-[theme]
-primaryColor = "#FF5B5B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
+Para confirmar que el sistema funciona correctamente:
 
-[server]
-port = 8501
-maxUploadSize = 200
-enableCORS = false
-```
-
-== Solución de problemas comunes:
-
-=== Error: Modelo no encontrado
-```fish
-# Forzar reentrenamiento del modelo
-rm models/pokemon_battle_model_xgboost.pkl
-python -c "import streamlit_app; streamlit_app.main()"
-```
-
-=== Error: Datos faltantes
-```fish
-# Verificar archivos de datos
-ls -la data/
-# Si faltan archivos, consultar README.md para instrucciones de descarga
-```
-
-=== Error: Dependencias
-```fish
-# Reinstalar dependencias
-pip install -r requirements.txt --force-reinstall
-# O usar conda si prefieres
-conda env create -f environment.yml
-```
-
-== Testing y validación:
-```fish
-# Ejecutar tests completos
+```bash
+# Ejecutar suite de pruebas
 ./run_tests.fish
 
-# Ejecutar tests específicos
-source venv/bin/activate.fish
-python -m pytest tests/test_pokemon_predictor.py::test_model_training -v
-
-# Verificar cobertura
-python -m pytest tests/ --cov=. --cov-report=html
+# O manualmente:
+source venv/bin/activate
+python -m pytest tests/ -v
 ```
 
-== Estructura de archivos generados:
-Después de la instalación y primera ejecución, la estructura incluirá:
+== Estructura de archivos necesarios
+
+El proyecto debe contener la siguiente estructura mínima para funcionar:
+
 ```
-plots/                          # Gráficos generados automáticamente
-├── match_predictions/          # Predicciones de combates
-├── shap_explanations/          # Explicaciones SHAP
-├── model_analysis/             # Análisis del modelo
-└── plot_registry.json         # Registro de plots
-
-models/                         # Modelos entrenados
-└── pokemon_battle_model_xgboost.pkl
-
-.streamlit/                     # Configuración de Streamlit
-└── config.toml
+pokemon_predictor/
+├── data/
+│   ├── all_pokemon_data.csv
+│   ├── combats.csv
+│   └── combats_features.csv
+├── requirements.txt
+├── streamlit_app.py
+├── setup.fish
+├── start_app.fish
+└── run_tests.fish
 ```
 
-== Uso avanzado:
+== Solución de problemas comunes
 
-=== Personalización del modelo:
-Para modificar hiperparámetros o probar otros algoritmos:
-1. Editar #raw("`advanced_data_manager.py`") en la clase #raw("`PokemonModelManager`")
-2. Modificar parámetros del #raw("`XGBClassifier`")
-3. Eliminar modelo existente para forzar reentrenamiento
+*Error: "Modelo no encontrado"*
+```bash
+# El modelo se genera automáticamente en la primera ejecución
+# Si persiste el error, eliminar y regenerar:
+rm -rf models/
+python streamlit_app.py
+```
 
-=== Añadir nuevos análisis:
-1. Crear funciones en #raw("`plot_utils.py`") para nuevas visualizaciones
-2. Integrar en #raw("`streamlit_app.py`") en la sección apropiada
-3. Configurar guardado automático usando #raw("`plot_manager`")
+*Error: "Archivos de datos faltantes"*
+```bash
+# Verificar presencia de archivos de datos
+ls -la data/
+# Los archivos deben estar en el directorio data/
+```
+
+*Error: "Dependencias no instaladas"*
+```bash
+# Reinstalar dependencias
+pip install -r requirements.txt --force-reinstall
+```
+
+*Problemas con el puerto 8501*
+```bash
+# Usar puerto alternativo
+streamlit run streamlit_app.py --server.port 8502
+```
+
+== Uso básico del sistema
+
+Una vez iniciada la aplicación:
+
+1. Abrir navegador en `http://localhost:8501`
+2. Seleccionar dos Pokémon para el combate
+3. Hacer clic en "Predecir Resultado"
+4. Revisar las predicciones y explicaciones generadas
+5. Explorar las visualizaciones adicionales en las pestañas laterales
 
 = Glosario de Términos
 
 Este glosario proporciona definiciones claras de términos técnicos y conceptos específicos del dominio utilizados a lo largo de la documentación.
 
-== Términos de Machine Learning
-
-*Accuracy*: Métrica que mide la proporción de predicciones correctas sobre el total de predicciones realizadas. Se calcula como (VP + VN) / (VP + VN + FP + FN).
-
-*Clasificación Binaria*: Tipo de problema de machine learning donde se debe asignar cada instancia a una de dos clases posibles (en este caso: "Pokémon A gana" o "Pokémon B gana").
-
-*Ensemble Learning*: Técnica que combina múltiples modelos de aprendizaje para crear un predictor más robusto y preciso que cualquier modelo individual.
-
-*F1-Score*: Media armónica de precision y recall, proporcionando una métrica balanceada especialmente útil en conjuntos de datos desbalanceados. Se calcula como 2 × (Precision × Recall) / (Precision + Recall).
-
-*Feature Engineering*: Proceso de crear, seleccionar y transformar variables de entrada para mejorar el rendimiento del modelo de machine learning.
-
-*Gradient Boosting*: Técnica de ensemble que construye modelos secuencialmente, donde cada nuevo modelo corrige los errores del conjunto anterior.
-
-*One-Hot Encoding*: Técnica de codificación que convierte variables categóricas en vectores binarios, creando una columna por cada categoría posible.
-
-*Overfitting*: Fenómeno donde un modelo aprende demasiado específicamente los datos de entrenamiento, perdiendo capacidad de generalización a datos nuevos.
-
-*Pipeline*: Secuencia de pasos de procesamiento de datos y modelado que se pueden ejecutar de manera coordinada y reproducible.
-
-*Precision*: Métrica que mide la proporción de predicciones positivas que fueron correctas. Se calcula como VP / (VP + FP).
-
-*Recall*: Métrica que mide la proporción de casos positivos reales que fueron identificados correctamente. Se calcula como VP / (VP + FN).
-
-*Regularización*: Técnicas para prevenir el sobreajuste añadiendo penalizaciones por complejidad al proceso de entrenamiento.
-
-*SHAP (SHapley Additive exPlanations)*: Método para explicar predicciones individuales de modelos de machine learning, basado en la teoría de juegos cooperativos.
-
-*Train-Test Split*: División del conjunto de datos en conjuntos separados para entrenamiento y evaluación, asegurando que el modelo sea evaluado en datos no vistos durante el entrenamiento.
-
-*XGBoost*: Implementación optimizada de gradiente potenciado diseñada para ser escalable, portátil y eficiente.
-
-== Términos del Dominio Pokémon
-
-*Estadísticas Base*: Valores fundamentales que definen las capacidades de un Pokémon: HP (Puntos de Salud), Attack (Ataque), Defense (Defensa), Special Attack (Ataque Especial), Special Defense (Defensa Especial), y Speed (Velocidad).
-
-*Efectividad de Tipos*: Sistema de ventajas y desventajas entre diferentes tipos elementales (ej: Agua es súper efectivo contra Fuego).
-
-*Meta-juego*: Estrategias, tendencias y patrones dominantes en el juego competitivo en un momento dado.
-
-*Matchup*: Enfrentamiento específico entre dos Pokémon o equipos, considerando sus fortalezas y debilidades relativas.
-
-*Sprite*: Imagen gráfica pequeña que representa a un Pokémon en el juego.
-
-*Tipo Elemental*: Categoría que define las características fundamentales de un Pokémon (ej: Fuego, Agua, Planta, etc.). Los Pokémon pueden tener uno o dos tipos.
-
-== Términos Técnicos del Sistema
-
-*Caché*: Almacenamiento temporal de datos o resultados computacionales para evitar recálculos innecesarios y mejorar el rendimiento.
-
-*Conjunto de Datos*: Conjunto de datos estructurados utilizado para entrenamiento y evaluación del modelo.
-
-*Endpoint*: Punto de acceso específico en una API o aplicación web.
-
-*Feature Importance*: Medida de la relevancia relativa de cada característica en las decisiones del modelo.
-
-*Force Plot*: Tipo específico de visualización SHAP que muestra cómo cada característica contribuye a empujar una predicción desde un valor base hacia el resultado final.
-
-*Latencia*: Tiempo que transcurre entre una solicitud y su respuesta correspondiente.
-
-*Pickle (.pkl)*: Formato de serialización de Python utilizado para guardar objetos complejos como modelos entrenados.
-
-*API (Application Programming Interface)*: Conjunto de definiciones y protocolos que permiten la comunicación entre diferentes componentes de software.
-
-*DataFrame*: Estructura de datos tabular bidimensional de la librería Pandas, similar a una hoja de cálculo.
-
-*Framework*: Marco de trabajo de Python para crear aplicaciones web interactivas de ciencia de datos de manera rápida.
-
-== Términos de Evaluación
-
-*Test Set*: Subconjunto del dataset reservado exclusivamente para evaluación final del modelo, nunca utilizado durante el entrenamiento.
-
-*Training Set*: Subconjunto del dataset utilizado para entrenar el modelo de machine learning.
-
-*Falso Negativo (FN)*: Caso donde el modelo predice la clase negativa pero la real es positiva.
-
-*Falso Positivo (FP)*: Caso donde el modelo predice la clase positiva pero la real es negativa.
-
-*Matriz de Confusión*: Tabla que resume el rendimiento de un clasificador mostrando la distribución de predicciones correctas e incorrectas.
-
-*Cross-Validation*: Técnica que divide el dataset en múltiples pliegues para evaluar la estabilidad y generalización del modelo.
-
-*Verdadero Negativo (VN)*: Caso donde el modelo predice correctamente la clase negativa.
-
-*Verdadero Positivo (VP)*: Caso donde el modelo predice correctamente la clase positiva.
-
-== Términos de Arquitectura de Software
-
-*Arquitectura Modular*: Diseño de software que separa funcionalidades en módulos independientes y reutilizables.
-
-*Capa de Presentación*: Componente de la arquitectura responsable de la interfaz de usuario y la interacción.
-
-*Carga Perezosa (Lazy Loading)*: Técnica de optimización que retrasa la carga de recursos hasta que son realmente necesarios.
-
-*Patrón de Diseño*: Solución reutilizable a problemas comunes en el diseño de software.
-
-*Persistencia*: Almacenamiento duradero de datos que sobrevive al cierre de la aplicación.
-
-*Escalabilidad*: Capacidad de un sistema para manejar cargas de trabajo crecientes manteniendo el rendimiento.
-
-== Términos de Testing y Validación
-
-*Punto de Referencia*: Punto de referencia estándar utilizado para comparar el rendimiento de diferentes sistemas o algoritmos.
-
-*Cobertura de Código*: Métrica que indica qué porcentaje del código fuente es ejecutado durante las pruebas.
-
-*Prueba de Integración*: Validación que verifica el funcionamiento correcto de múltiples componentes trabajando juntos.
-
-*Prueba Unitaria*: Validación que verifica el funcionamiento correcto de componentes individuales de manera aislada.
-
-*Regresión*: Degradación no intencionada en la funcionalidad debido a cambios en el código.
-
-*Suite de Pruebas*: Conjunto organizado de pruebas diseñadas para validar diferentes aspectos del sistema.
+#print-glossary(glossary-entries, show-all: true)
